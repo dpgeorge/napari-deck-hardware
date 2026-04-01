@@ -1,0 +1,28 @@
+use std::ops::*;
+use std::geo3d::*;
+
+mount_cirque_35mm =
+    (Cylinder(d=41mm, h=3mm).translate(z=-1.5mm)
+        | Cylinder(d=35mm, h=12mm).translate(z=-9mm))
+        - Cube(size_x=1.6mm, size_y=1.6mm, size_z=1.6mm).translate(y=-0.5 * 41mm + 0.5 * 1.6mm, z=-0.5 * 1.6mm - 1.4mm)
+;
+
+// mechanical, no detent, 36PPR
+mount_encoder_x =
+    Cylinder(d=8.85mm, h=2mm).translate(z=-1mm)
+        | Cube(size_x=24mm, size_y=23mm, size_z=16mm).translate(z=-10mm)
+        | Cube(size_x=18.4mm, size_y=29mm, size_z=14mm).translate(y=-3mm, z=-11mm)
+        | Cube(size_x=2.4mm, size_y=2.8mm, size_z=1mm).translate(x=-9.5mm, z=-1.5mm)
+;
+
+main =
+    Cube(size_x=88mm, size_y=44mm, size_z=26mm).translate(z=-13mm)
+        - Cube(size_x=80mm, size_y=36mm, size_z=12mm).translate(z=-20mm)
+        - Cube(size_x=8mm, size_y=8mm, size_z=4mm).translate(x=-44mm, z=-24mm)
+        - mount_cirque_35mm.translate(x=-20mm)
+        - mount_encoder_x.translate(x=20mm)
+    ;
+
+//mount_cirque_35mm;
+//mount_encoder_x;
+main;
