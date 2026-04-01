@@ -1,0 +1,32 @@
+use std::ops::*;
+use std::geo3d::*;
+
+const key_width = 10mm;
+const key_depth = 10mm;
+
+const curve_radius = 16mm;
+
+const shaft_notch_width = 1.1mm;
+const shaft_notch_height = 4mm;
+const shaft_notch_depth = 6.5mm;
+
+// distance between the two sliders
+const slider_2_distance = 14mm;
+
+part key() {
+    Cube(size_x=key_width, size_y=20mm, size_z=key_depth).translate(z=key_depth / 2)
+        - Cylinder(radius=curve_radius, height=20mm).rotate(y=90°).translate(z=curve_radius + key_depth - 2.5mm)
+        - Cube(size_x=shaft_notch_width, size_y=shaft_notch_height, size_z=shaft_notch_depth).translate(z=shaft_notch_depth / 2)
+    ;
+}
+
+part key_with_stop(mult: Length) {
+    key()
+        | Cube(size_x=key_width + slider_2_distance, size_y=1.6mm, size_z=key_depth).translate(x=slider_2_distance / 2, y=mult * (10 + 0.8), z=key_depth / 2)
+    ;
+}
+
+key();
+key_with_stop(1mm).translate(x=12mm);
+//key_with_stop(-1mm).translate(x=2*12mm, y=-2mm);
+
