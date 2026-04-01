@@ -1,0 +1,136 @@
+use std::math::*;
+use std::ops::*;
+use std::geo2d::*;
+use std::geo3d::*;
+
+sketch L(x0: Length, y0: Length, x1: Length, y1: Length) {
+    __builtin::geo2d::Line(x0 = x0/1mm, y0 = y0/1mm, x1 = x1/1mm, y1 = y1/1mm);
+}
+
+deck_top_height = 18mm;
+
+deck_side_profile = {
+    w = 100mm;
+    base_height = 5mm;
+    L(x0=-w/2, y0=0mm, x1=w/2, y1=0mm);
+    L(x0=-w/2, y0=0mm, x1=-w/2, y1=base_height);
+    L(x0=w/2, y0=0mm, x1=w/2, y1=base_height);
+    L(x0=-40mm, y0=deck_top_height + 20mm, x1=40mm, y1=deck_top_height);
+}.hull();
+
+angle = atan(20/80) * 180° / 3.1415926;
+
+    /*
+deck_side_profile()
+    //.translate(x=1mm, y=1mm)
+    //.hull()
+    .extrude(1mm)
+;
+    */
+
+/*
+outer = deck_side_profile()
+    .translate(x=-1000mm)
+    .revolve(20°)
+    .translate(x=1000mm)
+;
+*/
+
+outer = deck_side_profile
+    .extrude(140mm)
+;
+
+inner = outer.scale(0.9);
+
+// Make the top face flat and at y=0.
+deck_body = {
+    outer
+    | outer.scale(0.7).rotate(y=-15°).translate(x=28mm, z=-42mm)
+        - inner.translate(z=5mm)
+        - inner.scale(0.7).rotate(y=-15°).translate(x=28mm, z=(-42mm+5mm))
+        - Cube(20mm).translate(x=-45mm, z=70mm)
+    ;
+}.translate(z=-70mm).rotate(z=angle).translate(y=-deck_top_height);
+
+cutout_depth = 10mm;
+
+cutout_ipod_dial = {
+    screw_diam = 3mm;
+    /*
+    h = 10mm;
+    Cylinder(d=35mm, h=h);
+    Cylinder(d=screw_diam, h=h)
+        .multiply(4)
+        .distribute_grid(60mm, rows=2, columns=2)
+        .translate(z=-h/2);
+        */
+    Circle(d=35mm);
+    Circle(d=screw_diam)
+        .multiply(4)
+        .distribute_grid(60mm, rows=2, columns=2)
+}.extrude(cutout_depth).orient(Y);
+
+cutout_cherry_mx = {
+    Rect(14mm);
+}.extrude(cutout_depth).orient(Y);
+
+cutout_slider = {
+    screw_diam = 3mm;
+    Rect(width=46mm, height=10mm);
+    Circle(d=screw_diam)
+        .multiply(4)
+        .distribute_grid(width=2*48mm, height=2*19.5mm, rows=2, columns=2)
+        .translate(x=-1mm);
+}.extrude(cutout_depth).orient(Y);
+
+cutout_trackball = {
+    screw_diam = 3mm;
+    Rect(15mm);
+    Circle(d=screw_diam)
+        .multiply(4)
+        .distribute_grid(width=22mm, height=40mm, rows=2, columns=2);
+}.extrude(cutout_depth).orient(Y);
+
+cutout_joystick = {
+    screw_diam = 3mm;
+    Rect(width=18mm, height=20mm);
+    Circle(d=screw_diam)
+        .translate(x=-12mm, y=-7mm);
+    Circle(d=screw_diam)
+        .translate(x=7mm, y=14mm);
+}.extrude(cutout_depth).orient(Y);
+
+cutout_enc_dfrobot = {
+    screw_diam = 3mm;
+    Rect(width=16mm, height=13mm);
+    Circle(d=screw_diam)
+        .multiply(2)
+        .distribute_grid(51mm, rows=2, columns=1);
+}.extrude(cutout_depth).orient(Y);
+
+cutout_enc_adafruit = {
+    Circle(d=7mm);
+}.extrude(cutout_depth).orient(Y);
+
+label = 
+        Text("napari", 12mm).extrude(2.75mm)
+        | Text("deck", 12mm).extrude(2.75mm).translate(x=2.65mm, y=-7mm)
+;
+
+deck = {
+    deck_body
+        | label.orient(Y).rotate(y=-15°, z=3°).orient(X).translate(y=5mm, x=-4mm, z=-95mm)
+        // Main area.
+        - cutout_ipod_dial.translate(x=8mm, z=-40mm)
+        - cutout_cherry_mx.translate(x=-28mm, z=-50mm)
+        - cutout_cherry_mx.translate(x=-28mm, z=-30mm)
+        - cutout_slider.translate(x=0mm, z=48mm)
+        - cutout_joystick.translate(x=8mm, z=8mm)
+        - cutout_enc_dfrobot.translate(x=-28mm, z=17mm)
+        - cutout_enc_adafruit.translate(x=-28mm, z=-8mm)
+        // Thumb area.
+        - cutout_trackball.rotate(y=-15°, z=3°).translate(x=25mm, z=-90mm)
+    ;
+};
+
+deck;
