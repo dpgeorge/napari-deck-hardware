@@ -1,0 +1,81 @@
+use std::math::*;
+use std::ops::*;
+use std::geo2d::*;
+use std::geo3d::*;
+
+pub fn bolt(diam: Length, length: Length) {
+    Cylinder(d=diam, h=length)
+    | Cylinder(radius_bottom=diam / 2, radius_top=diam / 2 + 0.5mm, height=0.5mm).translate(z=length / 2 - 0.5mm)
+}
+
+pub mount_cherry_mx =
+    Cube(size_x=13.75mm, size_y=13.75mm, size_z=1.5mm).translate(z=-0.75mm)
+    | Cube(size_x=15mm, size_y=15mm, size_z=20mm).translate(z=-11.5mm)
+;
+
+pub mount_encoder_high =
+    // shaft
+    Cylinder(d=7mm, h=2.5mm).translate(z=-1.25mm)
+    // lug
+    | Cube(size_x=2mm, size_y=1mm, size_z=1.5mm).translate(y=-6mm, z=-1.75mm)
+    // body
+    | Cube(size_x=13mm, size_y=17mm, size_z=20mm).translate(z=-12.5mm)
+;
+
+pub mount_encoder_low =
+    // shaft
+    Cylinder(d=7mm, h=4mm).translate(z=-2mm)
+    // lug
+    | Cube(size_x=2mm, size_y=1mm, size_z=1.5mm).translate(y=-6mm, z=-3.25mm)
+    // body
+    | Cube(size_x=13mm, size_y=17mm, size_z=20mm).translate(z=-14mm)
+;
+
+pub mount_toggle_switch =
+    // shaft
+    Cylinder(d=6.5mm, h=6mm).translate(z=-3mm)
+    // body
+    | Cube(size_x=13mm, size_y=7mm, size_z=20mm).translate(z=-16mm)
+;
+
+// z=0 is the top, to be mounted flush.
+// x=y=0 is the centre of the slider.
+// The rest of it descends z<0.
+pub mount_slide_pot = {
+    // sliding shaft
+    Cube(size_x=2mm, size_y=70mm, size_z=9mm).translate(z=-4.5mm)
+    // main body
+    | Cube(size_x=10mm, size_y=75.5mm, size_z=7mm).translate(z=-12.5mm)
+    // PCB and screw holes
+    | (Cube(size_x=21mm, size_y=91mm, size_z=4mm)
+        // resistors
+        | Cube(size_x=6mm, size_y=10mm, size_z=1mm).translate(x=6mm, y=-13.5mm, z=2.5mm)
+        // screw holes
+        | Cylinder(d=2mm, h=10mm)
+            .multiply(4)
+            .distribute_grid(width=2*15mm, height=2*84.5mm, rows=2, columns=2)
+            .translate(z=2mm)
+        ).translate(x=4mm, y=-0.6mm, z=-18mm)
+    // connectors (now removed)
+    // | Cube(size_x=13mm, size_y=19mm, size_z=9mm).translate(x=15.5mm, y=-28.6mm, z=-15.5mm)
+    ;
+};
+
+pub part MountTrackball() {
+    Cube(size_x=14mm, size_y=14.3mm, size_z=3.5mm).translate(z=-1.75mm)
+    | Cube(size_x=25mm, size_y=17mm, size_z=10mm).translate(z=-8.5mm)
+    | Cube(size_x=16mm, size_y=6mm, size_z=11mm).translate(y=-11.5mm, z=-8.0mm)
+    | bolt(diam=1.9mm, length=3mm).rotate(x=180°)
+        .multiply(4)
+        .distribute_grid(width=40mm, height=22mm, rows=2, columns=2)
+        .translate(z=-3.5mm)
+}
+
+pub part MountJoystick() {
+    Cylinder(d=15mm, h=1.5mm).translate(z=-0.75mm)
+        | Cube(size_x=17.2mm, size_y=19.3mm, size_z=10mm).translate(x=-1.3mm, y=-0.3mm, z=-6.5mm)
+        | Cube(size_x=25mm, size_y=23mm, size_z=10mm).translate(x=-1.3mm, y=-2.15mm, z=-9.0mm)
+        | bolt(diam=1.4mm, length=3.5mm).rotate(x=180°).translate(x=9.0mm, y=7.0mm, z=-2.25mm)
+        | bolt(diam=1.4mm, length=3.5mm).rotate(x=180°).translate(x=-7.5mm, y=-11.25mm, z=-2.25mm)
+    ;
+}

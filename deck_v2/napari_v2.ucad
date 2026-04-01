@@ -1,0 +1,183 @@
+//use std::math::*;
+use std::ops::*;
+use std::geo2d::*;
+use std::geo3d::*;
+mod mounts;
+
+// Needed because distribute_grid resets the z position.
+const mount_cherry_mx_depth = 21.5mm;
+const mount_encoder_depth = 22.5mm;
+
+// 20mm seems to be the standard.
+const key_spacing = 20mm;
+
+// Can make this as large as needed, the extra is cut off by deck_slope_cuts.
+const bulk_depth = 100mm;
+
+keys_2 =
+    mounts::mount_cherry_mx
+        .multiply(2)
+        .distribute_grid(cell_size=key_spacing, rows=2, columns=1)
+        .translate(z=-mount_cherry_mx_depth)
+;
+
+keys_14 =
+    mounts::mount_cherry_mx
+        .multiply(14)
+        .distribute_grid(cell_size=key_spacing, rows=2, columns=7)
+        .translate(z=-mount_cherry_mx_depth)
+;
+
+encoders_3 =
+    mounts::mount_encoder_high
+        .multiply(3)
+        .distribute_grid(cell_size=key_spacing * 1.5, rows=1, columns=3)
+        .translate(z=-mount_encoder_depth)
+;
+
+sliders_2 =
+    mounts::mount_slide_pot.rotate(z=0°).translate(x=7.0mm)
+        | mounts::mount_slide_pot.rotate(z=180°).translate(x=-7.0mm)
+;
+
+deck_panel_centre_bulk =
+    Cube(size_x=184mm, size_y=98mm, size_z=bulk_depth).translate(z=-0.5 * bulk_depth)
+    // Cut corner that's close to the trackball.
+    - Cube(20mm).rotate(z=45°).translate(x=94.2mm, y=-49mm, z=-10mm)
+;
+
+deck_panel_centre_cavity =
+    // Main section at the bottom.
+    Cube(size_x=180mm, size_y=94mm, size_z=bulk_depth).translate(z=-0.5 * bulk_depth - 17mm)
+    // Make a deeper cavity for the switches and encoders.
+    | Cube(size_x=136mm, size_y=94mm, size_z=4mm).translate(x=22mm, z=-15mm)
+    // Add a small cut for the USB cable to exit.
+    | Cube(size_x=6mm, size_y=12mm, size_z=4mm).rotate(x=-12°).translate(x=92mm, y=30mm, z=-39mm)
+;
+
+deck_panel_centre_cuts =
+    keys_2.translate(x=-34mm, y=20mm)
+        | keys_14.translate(x=22mm, y=-20mm)
+        | encoders_3.translate(x=32mm, y=20mm)
+        | sliders_2.translate(x=-68mm)
+;
+
+deck_panel_left_bulk = 
+    Cube(size_x=49mm, size_y=110mm, size_z=bulk_depth).translate(z=-0.5 * bulk_depth)
+;
+
+deck_panel_left_cavity = 
+    Cube(size_x=45mm, size_y=106mm, size_z=bulk_depth).translate(z=-0.5 * bulk_depth - 17mm)
+;
+
+deck_panel_left_cuts = 
+    sliders_2.translate(x=0mm, y=-6mm)
+    | mounts::mount_toggle_switch.translate(y=44mm)
+;
+
+deck_panel_right_bulk =
+    Cube(size_x=76mm, size_y=54mm, size_z=bulk_depth).translate(x=-9mm, y=1mm, z=-0.5 * bulk_depth - 0.01mm)
+;
+
+deck_panel_right_cavity =
+    Cube(size_x=72mm, size_y=50mm, size_z=bulk_depth).translate(x=-9mm, y=1mm, z=-0.5 * bulk_depth - 13mm)
+;
+
+deck_panel_right_cuts =
+    mounts::MountJoystick().translate(x=14mm, y=-10mm)
+        | mounts::mount_encoder_low.translate(x=14mm, y=16mm)
+        | mounts::MountTrackball().translate(x=-14mm, y=-10mm)
+        | mounts::mount_encoder_low.translate(x=-14mm, y=16mm)
+;
+
+op deck_left_orient() {
+    @input.rotate(z=0°).translate(x=-112mm, y=-10mm);
+}
+
+op deck_right_orient() {
+    @input.rotate(y=-7°).rotate(z=-18°).translate(x=121mm, y=-35mm, z=-5mm);
+}
+
+deck_panel_bulk =
+    deck_panel_centre_bulk
+        | deck_panel_left_bulk.deck_left_orient()
+        | deck_panel_right_bulk.deck_right_orient()
+;
+
+deck_panel_cuts =
+    deck_panel_centre_cuts
+        | deck_panel_left_cuts.deck_left_orient()
+        | deck_panel_right_cuts.deck_right_orient()
+;
+
+deck_panel_cavity =
+    deck_panel_centre_cavity
+    | deck_panel_left_cavity.deck_left_orient()
+    | deck_panel_right_cavity.deck_right_orient()
+;
+
+deck_slope_cuts =
+    Cube(size_x=400mm, size_y=300mm, size_z=bulk_depth)
+    .translate(z=-0.5 * bulk_depth - 33.700mm)
+    .rotate(x=-12°)
+;
+
+//-----------------------------------------------------------------------------------
+
+// whole deck
+deck = deck_panel_bulk
+    - deck_panel_cuts
+    - deck_panel_cavity
+    - deck_slope_cuts
+;
+
+/*
+// all excluding the right part
+deck_panel_centre_bulk
+    | deck_panel_left_bulk.deck_left_orient()
+    - deck_panel_cuts
+    - deck_panel_cavity
+    - deck_slope_cuts
+;
+*/
+
+/*
+// just right part
+deck_panel_right_bulk.deck_right_orient()
+    - deck_panel_cuts
+    - deck_panel_cavity
+    - deck_slope_cuts
+    - deck_panel_centre_bulk // subtract what we already printed
+;
+*/
+
+// thin base plate
+const base_scale = 1.03;
+deck_panel_bulk_oversize =
+    deck_panel_centre_bulk.scale(base_scale)
+        | deck_panel_left_bulk.scale(base_scale).deck_left_orient()
+        | deck_panel_right_bulk.scale(base_scale).deck_right_orient()
+;
+deck_bulk_oversize = deck_panel_bulk_oversize - deck_slope_cuts.scale(base_scale);
+deck_base_plate_thin = (deck_bulk_oversize - deck)
+    & deck_slope_cuts.scale(base_scale).translate(z=3mm)
+;
+//deck_base_plate_thin;
+
+const base_scale_undersize = 0.90;
+deck_bulk_undersize =
+    (deck_panel_centre_bulk.scale(base_scale_undersize)
+        | deck_panel_left_bulk.scale(base_scale_undersize).deck_left_orient()
+        | deck_panel_right_bulk.scale(base_scale_undersize).deck_right_orient())
+    - deck_slope_cuts.scale(base_scale_undersize)
+;
+deck_bulk_oversize_long = deck_panel_bulk_oversize - deck_slope_cuts.scale(base_scale).translate(z=-6mm);
+deck_base_plate_thick = (deck_bulk_oversize_long - deck)
+    & deck_slope_cuts.scale(base_scale).translate(z=4mm)
+    - deck_bulk_undersize.translate(z=-8mm)
+;
+//deck_base_plate_thick;
+deck;
+
+//deck_panel_right_bulk - deck_panel_right_cuts;
+//deck_panel_right_cuts;
