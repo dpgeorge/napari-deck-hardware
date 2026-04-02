@@ -6893,7 +6893,7 @@
 				(justify mirror)
 			)
 		)
-		(property "Value" "DNP"
+		(property "Value" "CONN_A_AUX"
 			(at 0 -7.46 0)
 			(layer "B.Fab")
 			(uuid "51b3c259-58e3-42b6-b2df-240cb4d05a72")
